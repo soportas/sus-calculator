@@ -1,10 +1,13 @@
-import Image from "next/image";
-import Papa from "papaparse";
+"use client";
+
+import { useState } from "react";
+import Papa, { ParseResult } from "papaparse";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-import csvString from "./spreadsheet";
+// import csvString from "./spreadsheet";
 
-function convertToLikert(value: string) {
+function convertToLikert(value: string): number {
   switch (value) {
     case "Strongly Agree":
       return 4;
@@ -16,89 +19,188 @@ function convertToLikert(value: string) {
       return 1;
     case "Strongly Disagree":
       return 0;
+    default:
+      return 0;
   }
 }
 
+interface ResultRow {
+  id: string;
+  startTime: string;
+  name: string;
+  lastModifiedTime: string;
+  email: string;
+  completionTime: string;
+  q1: string;
+  q2: string;
+  q3: string;
+  q4: string;
+  q5: string;
+  q6: string;
+  q7: string;
+  q8: string;
+  q9: string;
+  q10: string;
+}
+
+interface SumResultRow {
+  q1: number;
+  q2: number;
+  q3: number;
+  q4: number;
+  q5: number;
+  q6: number;
+  q7: number;
+  q8: number;
+  q9: number;
+  q10: number;
+}
+
 export default function Home() {
-  const csvResults = Papa.parse(csvString, { header: true });
-  const csvData = csvResults.data;
-  console.log(csvData);
-  const results = csvData.map((row) => {
-    const q1 = convertToLikert(
-      row["I think that I would like to use this system frequently."]
-    );
-    const q2 = convertToLikert(row["I found the system to be simple."]);
-    const q3 = convertToLikert(row["I thought the system was easy to use."]);
-    const q4 = convertToLikert(
-      row[
-        "I think that I could use the system without the support of a technical person."
-      ]
-    );
-    const q5 = convertToLikert(
-      row["I found the various functions in the system were well integrated."]
-    );
-    const q6 = convertToLikert(
-      row["I thought there was a lot of consistency in the system."]
-    );
-    const q7 = convertToLikert(
-      row[
-        "I would imagine that most people would learn to use the system very quickly."
-      ]
-    );
-    const q8 = convertToLikert(row["I found the system very intuitive."]);
-    const q9 = convertToLikert(row["I felt very confident using the system."]);
-    const q10 = convertToLikert(
-      row["I could use the system without having to learn anything new."]
-    );
-    return {
-      q1,
-      q2,
-      q3,
-      q4,
-      q5,
-      q6,
-      q7,
-      q8,
-      q9,
-      q10,
-    };
-  });
-  console.log(results);
+  const [file, setFile] = useState<File | undefined>();
+  const [csvData, setCsvData] = useState<ResultRow[][] | undefined>();
 
-  const summedResults = results.map((row) => {
-    return Object.values(row).reduce((acc, curr) => acc + curr, 0);
-  });
-  console.log(summedResults);
+  const handleOnChange = (e) => {
+    setFile(e.target.files[0]);
+  };
 
-  const susResults = summedResults.map((row) => {
-    return row * 2.5;
-  });
-  console.log(susResults);
+  const handleOnSubmit = (e) => {
+    e.preventDefault();
 
-  const susMean = susResults.reduce((a, b) => a + b) / susResults.length;
-  console.log(susMean);
+    if (file) {
+      Papa.parse(file, {
+        header: true,
+        complete: function (results: ParseResult<ResultRow[]>) {
+          const data: ResultRow[][] = results.data;
+          setCsvData(data);
+        },
+      });
+    }
+  };
 
-  const susMin = Math.min(...susResults);
-  const susMax = Math.max(...susResults);
-  console.log(susMin, susMax);
+  // const csvResults = Papa.parse(csvString, { header: true });
+  // const testData = csvResults.data;
 
-  const susRange = susMax - susMin;
-  console.log(susRange);
+  const results: SumResultRow[] = [];
+  if (csvData) {
+    for (let i = 0; i < csvData.length; i++) {
+      const row = csvData[i];
+      if (row["ID"]) {
+        const q1 = convertToLikert(
+          row["I think that I would like to use this system frequently."]
+        );
+        const q2 = convertToLikert(row["I found the system to be simple."]);
+        const q3 = convertToLikert(
+          row["I thought the system was easy to use."]
+        );
+        const q4 = convertToLikert(
+          row[
+            " I think that I could use the system without the support of a technical person."
+          ]
+        );
+        const q5 = convertToLikert(
+          row[
+            "I found the various functions in the system were well integrated."
+          ]
+        );
+        const q6 = convertToLikert(
+          row["I thought there was a lot of consistency in the system."]
+        );
+        const q7 = convertToLikert(
+          row[
+            "I would imagine that most people would learn to use the system very quickly."
+          ]
+        );
+        const q8 = convertToLikert(row["I found the system very intuitive."]);
+        const q9 = convertToLikert(
+          row["I felt very confident using the system."]
+        );
+        const q10 = convertToLikert(
+          row["I could use the system without having to learn anything new."]
+        );
+
+        results.push({
+          q1,
+          q2,
+          q3,
+          q4,
+          q5,
+          q6,
+          q7,
+          q8,
+          q9,
+          q10,
+        });
+      }
+    }
+  }
+
+  // console.log("uploadedresults");
+  // console.log(results);
+
+  let summedResults: number[] = [];
+  let susResults: number[] = [];
+  let susMean = 0;
+  let susMin = 0;
+  let susMax = 0;
+  let susRange = 0;
+
+  if (results.length > 0) {
+    summedResults = results.map((row) => {
+      return Object.values(row).reduce((acc, curr) => acc + curr, 0);
+    });
+    // console.log("summedResults");
+    // console.log(summedResults);
+
+    susResults = summedResults.map((row) => {
+      return row * 2.5;
+    });
+    // console.log("susResults");
+    // console.log(susResults);
+
+    susMean = susResults.reduce((a, b) => a + b) / susResults.length;
+    // console.log(susMean);
+
+    susMin = Math.min(...susResults);
+    susMax = Math.max(...susResults);
+    // console.log(susMin, susMax);
+
+    susRange = susMax - susMin;
+    // console.log(susRange);
+  }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-20 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 pt-60 items-center">
+    <div className="flex flex-col items-center justify-items-center min-h-screen p-20 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <main className="flex flex-col gap-8 items-center">
         <h1 className="text-6xl font-semibold text-center w0.6 sm:w-0.8">
           System Usability Scale Calculator
         </h1>
-        <p className="w-0.6 sm:w-0.8">
-          The System Usability Scale (SUS) is a simple, ten-item scale used to
-          quickly evaluate the usability of a system.
-        </p>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <Button>Upload CSV</Button>
-          {/* <Button>Click me</Button> */}
+        <div className="flex flex-col gap-2 items-center">
+          <p className="w-0.6 sm:w-0.8">
+            The System Usability Scale (SUS) is a simple, ten-item scale used to
+            quickly evaluate the usability of a system.
+          </p>
+          <p className="w-0.6 sm:w-0.8">
+            This tool calculates the SUS score for a positive SUS (designed by
+            Sauro & Lewis, 2011).
+          </p>
+        </div>
+        <div>
+          <form className="flex gap-2 items-center">
+            <Input
+              id="csvFile"
+              type="file"
+              accept=".csv"
+              onChange={handleOnChange}
+            />
+            <Button
+              onClick={(e) => {
+                handleOnSubmit(e);
+              }}
+            >
+              Upload CSV
+            </Button>
+          </form>
         </div>
         <div className="flex flex-col gap-4 w-full p-4 items-center border border-solid rounded-xl border-gray-300">
           <div className="flex gap-2 items-start flex-col">
