@@ -202,8 +202,9 @@ export default function Home() {
             </Button>
           </form>
         </div>
-        <div className="flex flex-col gap-4 w-full p-4 items-center border border-solid rounded-xl border-gray-300">
-          <div className="flex gap-2 items-start flex-col">
+        <div className="flex gap-4 w-full">
+          <div className="flex flex-col gap-4 w-full p-4 border border-solid rounded-xl border-gray-300">
+            <h3 className="font-bold">SUS Score Summary</h3>
             <div className="flex gap-2">
               <p>Average SUS score:</p>
               <p>{susMean}</p>
@@ -220,8 +221,10 @@ export default function Home() {
               <p>Range:</p>
               <p>{susRange}</p>
             </div>
+          </div>
 
-            <p>SUS Score by participant</p>
+          <div className="flex flex-col gap-4 w-full p-4 border border-solid rounded-xl border-gray-300">
+            <h3 className="font-bold">SUS Score by participant</h3>
             {susResults.map((result, index) => (
               <div className="flex gap-2" key={index}>
                 <p>{index + 1}:</p>
