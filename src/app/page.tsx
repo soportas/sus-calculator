@@ -25,53 +25,37 @@ function convertToLikert(value: string): number {
 }
 
 interface ResultRow {
-  id: string;
-  startTime: string;
-  name: string;
-  lastModifiedTime: string;
-  email: string;
-  completionTime: string;
-  q1: string;
-  q2: string;
-  q3: string;
-  q4: string;
-  q5: string;
-  q6: string;
-  q7: string;
-  q8: string;
-  q9: string;
-  q10: string;
+  [index: string]: string;
 }
 
 interface SumResultRow {
-  q1: number;
-  q2: number;
-  q3: number;
-  q4: number;
-  q5: number;
-  q6: number;
-  q7: number;
-  q8: number;
-  q9: number;
-  q10: number;
+  [index: string]: number;
 }
 
 export default function Home() {
   const [file, setFile] = useState<File | undefined>();
-  const [csvData, setCsvData] = useState<ResultRow[][] | undefined>();
+  const [csvData, setCsvData] = useState<ResultRow[] | undefined>();
 
-  const handleOnChange = (e) => {
-    setFile(e.target.files[0]);
+  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e) {
+      const target = e.target as HTMLInputElement;
+
+      if (target.files) {
+        setFile(target.files[0]);
+      }
+    }
   };
 
-  const handleOnSubmit = (e) => {
+  const handleOnSubmit = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
     e.preventDefault();
 
     if (file) {
       Papa.parse(file, {
         header: true,
-        complete: function (results: ParseResult<ResultRow[]>) {
-          const data: ResultRow[][] = results.data;
+        complete: function (results: ParseResult<ResultRow>) {
+          const data: ResultRow[] = results.data;
           setCsvData(data);
         },
       });
@@ -84,7 +68,7 @@ export default function Home() {
   const results: SumResultRow[] = [];
   if (csvData) {
     for (let i = 0; i < csvData.length; i++) {
-      const row = csvData[i];
+      const row = csvData[i] as ResultRow;
       if (row["ID"]) {
         const q1 = convertToLikert(
           row["I think that I would like to use this system frequently."]
